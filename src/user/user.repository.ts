@@ -11,10 +11,10 @@ export class UserRepository {
   private users: User[] = [];
 
   async create(user: User) {
-    this.users.push(user);
+    await this.users.push(user);
   }
 
   async list() {
-    return this.users;
+    return await this.users;
   }
 }
