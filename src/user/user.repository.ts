@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from './user.entity';
 
@@ -22,5 +23,22 @@ export class UserRepository {
   async existsByEmail(email: string) {
     const possibleUser = this.users.find((user) => user.email === email);
     return possibleUser !== undefined;
+  }
+
+  async update(id: string, user: Partial<UserEntity>) {
+    const userToUpdate = this.users.find((user) => user.id === id);
+
+    if (!userToUpdate) {
+      throw new Error('User not found');
+    }
+
+    Object.entries(user).forEach(([key, value]) => {
+      if (key === 'id') {
+        return;
+      }
+      userToUpdate[key] = value;
+    });
+
+    return userToUpdate;
   }
 }

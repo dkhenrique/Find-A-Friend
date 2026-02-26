@@ -1,8 +1,7 @@
-import { IsEmail, MinLength, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, MinLength, IsOptional } from 'class-validator';
 import { EmailIsUnique } from '../validator/email-is-unique.validator';
 
-export class CreateUserDto {
-  @IsNotEmpty({ message: 'Name is required' })
+export class UpdateUserDto {
   @IsOptional()
   name: string;
 
