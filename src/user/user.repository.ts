@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/require-await */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserEntity } from './user.entity';
 
 export interface User {
@@ -29,7 +29,7 @@ export class UserRepository {
     const userToUpdate = this.users.find((user) => user.id === id);
 
     if (!userToUpdate) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     Object.entries(user).forEach(([key, value]) => {
@@ -46,7 +46,7 @@ export class UserRepository {
     const userToDelete = this.users.find((user) => user.id === id);
 
     if (!userToDelete) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     this.users = this.users.filter((user) => user.id !== id);
