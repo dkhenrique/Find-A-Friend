@@ -14,8 +14,8 @@ import { ConfigModule } from '@nestjs/config';
     }),
     TypeOrmModule.forRootAsync({
       useClass: PostgresConfigService,
-      inject: [PostgresConfigService],
     }),
   ],
+  providers: [PostgresConfigService],
 })
 export class AppModule {}
