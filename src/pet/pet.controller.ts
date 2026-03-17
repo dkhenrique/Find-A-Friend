@@ -13,10 +13,14 @@ import { v4 as uuid } from 'uuid';
 import { PetEntity } from './pet.entity';
 import { PetListDto } from './dto/PetList.dto';
 import { UpdatePetDto } from './dto/UpdatePet.dto';
+import { PetService } from './pet.service';
 
 @Controller('/pets')
 export class PetController {
-  constructor(private petRepository: PetRepository) {}
+  constructor(
+    private petRepository: PetRepository,
+    private petService: PetService,
+  ) {}
 
   @Post()
   async createPet(@Body() body: CreatePetDto) {
@@ -25,7 +29,7 @@ export class PetController {
     petEntity.especie = body.especie;
     petEntity.adotado = body.adotado;
     petEntity.id = uuid();
-    await this.petRepository.create(petEntity);
+    await this.petService.createPet(petEntity);
     return {
       pet: new PetListDto(
         petEntity.id,
@@ -39,37 +43,24 @@ export class PetController {
 
   @Get()
   async listPets() {
-    const savedPets = await this.petRepository.list();
-    const petList = savedPets.map(
-      (pet) => new PetListDto(pet.id, pet.name, pet.especie, pet.adotado),
-    );
-    return petList;
+    const savedPets = await this.petService.findAllPets();
+    return savedPets;
   }
 
   @Put('/:id')
   async updatePet(@Param('id') id: string, @Body() newPet: UpdatePetDto) {
-    const petUpdated = await this.petRepository.update(id, newPet);
+    const petUpdated = await this.petService.updatePet(id, newPet);
     return {
-      pet: new PetListDto(
-        petUpdated.id,
-        petUpdated.name,
-        petUpdated.especie,
-        petUpdated.adotado,
-      ),
+      petUpdated,
       message: 'Pet updated',
     };
   }
 
   @Delete('/:id')
   async deletePet(@Param('id') id: string) {
-    const petDeleted = await this.petRepository.delete(id);
+    const petDeleted = await this.petService.deletePet(id);
     return {
-      pet: new PetListDto(
-        petDeleted.id,
-        petDeleted.name,
-        petDeleted.especie,
-        petDeleted.adotado,
-      ),
+      petDeleted,
       message: 'Pet deleted',
     };
   }
