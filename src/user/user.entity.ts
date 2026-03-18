@@ -1,8 +1,11 @@
+import { AdoptionEntity } from 'src/adoption/adoption.entity';
+import { PetEntity } from 'src/pet/pet.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -20,6 +23,12 @@ export class UserEntity {
 
   @Column({ name: 'password', length: 255, nullable: false })
   password: string;
+
+  @OneToMany(() => PetEntity, (pet) => pet.user, { eager: true })
+  pets: PetEntity[];
+
+  @OneToMany(() => AdoptionEntity, (adoption) => adoption.adopter)
+  adoptions: AdoptionEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

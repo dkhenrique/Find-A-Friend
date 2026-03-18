@@ -1,12 +1,21 @@
 import { PetEnum } from 'src/enums/petEnum';
+import { UserEntity } from 'src/user/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { PetPhotoEntity } from './pet-photo.entity';
+import { AdoptionEntity } from 'src/adoption/adoption.entity';
+import { PetRequirementEntity } from './pet-requirement.entity';
 
 @Entity({ name: 'pets' })
 export class PetEntity {
@@ -21,6 +30,19 @@ export class PetEntity {
 
   @Column({ name: 'adotado', nullable: false })
   adotado: boolean;
+
+  @ManyToOne(() => UserEntity, (user) => user.pets)
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity;
+
+  @OneToMany(() => PetPhotoEntity, (photo) => photo.pet)
+  photos: PetPhotoEntity[];
+
+  @OneToOne(() => AdoptionEntity, (adoption) => adoption.pet)
+  adoption: AdoptionEntity;
+
+  @ManyToMany(() => PetRequirementEntity, (requirement) => requirement.pets)
+  requirements: PetRequirementEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

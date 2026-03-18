@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { AdoptionEntity } from 'src/adoption/adoption.entity';
+import { PetPhotoEntity } from 'src/pet/pet-photo.entity';
+import { PetRequirementEntity } from 'src/pet/pet-requirement.entity';
 import { PetEntity } from 'src/pet/pet.entity';
 import { UserEntity } from 'src/user/user.entity';
 
@@ -16,8 +19,15 @@ export class PostgresConfigService implements TypeOrmOptionsFactory {
       username: this.configService.get('DB_USERNAME'),
       password: this.configService.get('DB_PASSWORD'),
       database: this.configService.get('DB_NAME'),
-      entities: [UserEntity, PetEntity],
+      entities: [
+        UserEntity,
+        PetEntity,
+        PetPhotoEntity,
+        AdoptionEntity,
+        PetRequirementEntity,
+      ],
       synchronize: true,
+      autoLoadEntities: true,
     };
   }
 }
