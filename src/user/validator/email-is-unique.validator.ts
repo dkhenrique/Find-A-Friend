@@ -5,20 +5,20 @@ import {
   ValidatorConstraintInterface,
   ValidationOptions,
 } from 'class-validator';
-import { UserRepository } from '../user.repository';
+import { UserService } from '../user.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 @ValidatorConstraint({ async: true })
 export class EmailIsUniqueValidator implements ValidatorConstraintInterface {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private userService: UserService) {}
 
   async validate(
-    value: any,
+    value: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     validationArguments?: ValidationArguments,
   ): Promise<boolean> {
-    const emailExists = await this.userRepository.existsByEmail(value);
+    const emailExists = await this.userService.existsByEmail(value);
     return !emailExists;
   }
 }

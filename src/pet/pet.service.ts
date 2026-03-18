@@ -4,6 +4,7 @@ import { PetEntity } from './pet.entity';
 import { Repository } from 'typeorm';
 import { PetListDto } from './dto/PetList.dto';
 import { UpdatePetDto } from './dto/UpdatePet.dto';
+import { CreatePetDto } from './dto/CreatePet.dto';
 
 @Injectable()
 export class PetService {
@@ -12,8 +13,10 @@ export class PetService {
     private readonly petRepository: Repository<PetEntity>,
   ) {}
 
-  async createPet(petEntity: PetEntity) {
-    await this.petRepository.save(petEntity);
+  async createPet(dto: CreatePetDto): Promise<PetListDto> {
+    const pet = this.petRepository.create(dto);
+    const saved = await this.petRepository.save(pet);
+    return new PetListDto(saved.id, saved.name, saved.especie, saved.adotado);
   }
 
   async findAllPets() {

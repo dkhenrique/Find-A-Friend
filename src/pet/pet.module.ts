@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PetController } from './pet.controller';
-import { PetRepository } from './pet.repository';
 import { PetEntity } from './pet.entity';
+import { PetPhotoEntity } from './pet-photo.entity';
+import { PetRequirementEntity } from './pet-requirement.entity';
 import { PetService } from './pet.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PetEntity])],
+  imports: [
+    TypeOrmModule.forFeature([PetEntity, PetPhotoEntity, PetRequirementEntity]),
+  ],
   controllers: [PetController],
-  providers: [PetRepository, PetService],
+  providers: [PetService],
 })
 export class PetModule {}
