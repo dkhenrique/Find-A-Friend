@@ -35,13 +35,17 @@ export class PetEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @OneToMany(() => PetPhotoEntity, (photo) => photo.pet)
+  @OneToMany(() => PetPhotoEntity, (photo) => photo.pet, {
+    cascade: ['insert', 'soft-remove'],
+  })
   photos: PetPhotoEntity[];
 
   @OneToOne(() => AdoptionEntity, (adoption) => adoption.pet)
   adoption: AdoptionEntity;
 
-  @ManyToMany(() => PetRequirementEntity, (requirement) => requirement.pets)
+  @ManyToMany(() => PetRequirementEntity, (requirement) => requirement.pets, {
+    cascade: ['insert'],
+  })
   requirements: PetRequirementEntity[];
 
   @CreateDateColumn({ name: 'created_at' })

@@ -24,7 +24,10 @@ export class UserEntity {
   @Column({ name: 'password', length: 255, nullable: false })
   password: string;
 
-  @OneToMany(() => PetEntity, (pet) => pet.user, { eager: true })
+  @OneToMany(() => PetEntity, (pet) => pet.user, {
+    eager: true,
+    cascade: ['insert', 'update'],
+  })
   pets: PetEntity[];
 
   @OneToMany(() => AdoptionEntity, (adoption) => adoption.adopter)

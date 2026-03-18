@@ -19,7 +19,11 @@ export class PetPhotoEntity {
   @Column({ name: 'description', length: 200, nullable: true })
   description: string;
 
-  @ManyToOne(() => PetEntity, (pet) => pet.photos, { onDelete: 'CASCADE' })
+  @ManyToOne(() => PetEntity, (pet) => pet.photos, {
+    orphanedRowAction: 'delete',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'pet_id' })
   pet: PetEntity;
 
