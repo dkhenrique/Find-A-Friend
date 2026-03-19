@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { PetEntity } from 'src/pet/pet.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { CreateAdoptionDto } from './dto/create-adoption.dto';
+import { AdoptionsListDto } from './dto/list-adoptions.dto';
 
 @Injectable()
 export class AdoptionService {
@@ -41,5 +42,43 @@ export class AdoptionService {
     pet.adotado = true;
     await this.petRepository.save(pet);
     return this.adoptionRepository.save(adoption);
+  }
+
+  async findAllAdoptions() {
+    const savedAdoptions = await this.adoptionRepository.find({
+      relations: ['pet', 'adopter'],
+    });
+    const adoptionsList = savedAdoptions.map(
+      (adoption) =>
+        new AdoptionsListDto(
+          adoption.id,
+          adoption.pet.id,
+          adoption.pet.name,
+          adoption.adopter.name,
+          adoption.pet.adotado,
+        ),
+    );
+    return adoptionsList;
+  }
+
+  async findAdoptionById(id: string) {
+    const adoption = await this.adoptionRepository.findOne({
+      where: { id },
+      relations: ['pet', 'adopter'],
+    });
+    if (!adoption) throw new NotFoundException('Adoção não encontrada');
+    return adoption;
+  }
+
+  async cancelAdoption(id: string) {
+    const adoption = await this.adoptionRepository.findOne({
+      where: { id },
+      relations: ['pet'],
+    });
+    if (!adoption) throw new NotFoundException('Adoção não encontrada');
+
+    adoption.pet.adotado = false;
+    await this.petRepository.save(adoption.pet);
+    await this.adoptionRepository.remove(adoption);
   }
 }
