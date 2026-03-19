@@ -1,42 +1,95 @@
-# Find-a-Friend Backend
+# 🐾 Find-a-Friend — Backend
 
-Uma API robusta construída com **NestJS** para ajudar no gerenciamento e adoção de animais de estimação.
+API RESTful para adoção de pets, construída com **NestJS** e **TypeORM**.
 
-## 🚀 Tecnologias Utilizadas
+## 🚀 Tecnologias
 
-- **Framework**: [NestJS v11](https://nestjs.com/)
-- **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
-- **Validação**: [class-validator](https://github.com/typestack/class-validator) & [class-transformer](https://github.com/typestack/class-transformer)
-- **Identificadores**: [UUID v4](https://github.com/uuidjs/uuid)
-- **Padronização**: ESLint & Prettier
+- **NestJS** v11 — framework Node.js
+- **TypeScript** — strict mode
+- **TypeORM** — ORM com PostgreSQL
+- **bcrypt** — hash de senhas
+- **class-validator** / **class-transformer** — validação de DTOs
+- **ESLint** / **Prettier** — qualidade de código
 
-## 🏗️ Arquitetura e Boas Práticas
-
-O projeto foi desenvolvido seguindo princípios de engenharia de software modernos e padrões recomendados pela comunidade NestJS:
-
-- **SOLID**:
-  - **Single Responsibility Principle**: Separação clara entre Controllers (rotas/entrada), DTOs (validação/formato) e Repositories (persistência).
-  - **Dependency Inversion**: Uso extensivo de Injeção de Dependência do NestJS para desacoplar componentes.
-- **Repository Pattern**: Abstração da camada de dados permitindo que a lógica de negócio não dependa de uma implementação específica de banco de dados.
-- **DTOs (Data Transfer Objects)**: Garantia de integridade dos dados trafegados entre as camadas com validações granulares.
-- **Custom Validators**: Implementação de validadores customizados (ex: Unicidade de E-mail) integrados ao sistema de injeção de dependência.
-- **Tratamento de Exceções**: Uso de `Built-in HTTP Exceptions` do NestJS (como `NotFoundException`) para respostas padronizadas e semânticas.
-
-## 📁 Estrutura do Projeto
+## 📁 Estrutura
 
 ```text
 src/
-├── enums/          # Enumerações globais (ex: PetEnum)
-├── pet/            # Módulo de Animais (Controllers, Repositories, DTOs, Entities)
-└── user/           # Módulo de Usuários (Controllers, Repositories, DTOs, Entities, Validators)
+├── adoption/       # Módulo de Adoções (entity, service, controller, DTOs)
+├── config/         # Configuração do TypeORM/PostgreSQL
+├── enums/          # Enumerações (PetEnum)
+├── pet/            # Módulo de Pets (entity, service, controller, DTOs, fotos, requisitos)
+└── user/           # Módulo de Usuários (entity, service, controller, DTOs, validators)
 ```
+
+## 🗄️ Modelo de Dados
+
+```text
+UserEntity (users)
+├── OneToMany  → PetEntity         (pets cadastrados pelo usuário)
+└── OneToMany  → AdoptionEntity    (adoções realizadas)
+
+PetEntity (pets)
+├── ManyToOne  → UserEntity        (quem cadastrou)
+├── OneToMany  → PetPhotoEntity    (fotos do pet)
+├── ManyToMany → PetRequirementEntity (requisitos para adoção)
+└── OneToOne   → AdoptionEntity    (registro de adoção)
+
+AdoptionEntity (adoptions)
+├── ManyToOne  → UserEntity        (adotante)
+└── ManyToOne  → PetEntity         (pet adotado)
+```
+
+## 📡 Endpoints
+
+### Users
+
+| Método   | Endpoint       | Descrição         |
+|----------|----------------|--------------------|
+| `POST`   | `/users`       | Criar usuário      |
+| `GET`    | `/users`       | Listar usuários    |
+| `PUT`    | `/users/:id`   | Atualizar usuário  |
+| `DELETE` | `/users/:id`   | Deletar usuário    |
+
+### Pets
+
+| Método   | Endpoint                              | Descrição                          |
+|----------|---------------------------------------|------------------------------------|
+| `POST`   | `/pets`                               | Criar pet                          |
+| `GET`    | `/pets`                               | Listar pets                        |
+| `GET`    | `/pets/:id`                           | Buscar pet (com fotos e requisitos)|
+| `PUT`    | `/pets/:id`                           | Atualizar pet                      |
+| `DELETE` | `/pets/:id`                           | Deletar pet                        |
+| `POST`   | `/pets/:petId/photos`                 | Adicionar foto                     |
+| `DELETE` | `/pets/:petId/photos/:photoId`        | Remover foto                       |
+| `POST`   | `/pets/:petId/requirements`           | Vincular requisito                 |
+| `DELETE` | `/pets/:petId/requirements/:reqId`    | Desvincular requisito              |
+
+### Adoptions
+
+| Método   | Endpoint          | Descrição          |
+|----------|-------------------|--------------------|
+| `POST`   | `/adoptions`      | Realizar adoção    |
+| `GET`    | `/adoptions`      | Listar adoções     |
+| `GET`    | `/adoptions/:id`  | Buscar adoção      |
+| `DELETE` | `/adoptions/:id`  | Cancelar adoção    |
 
 ## 🛠️ Como Iniciar
 
 ### Pré-requisitos
 
 - Node.js (v18+)
-- npm ou yarn
+- PostgreSQL rodando localmente
+- Arquivo `.env` configurado:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha
+DB_NAME=find_a_friend
+NODE_ENV=development
+```
 
 ### Instalação
 
@@ -44,22 +97,34 @@ src/
 npm install
 ```
 
-### Executando o projeto
+### Executando
 
 ```bash
-# Desenvolvimento
+# Desenvolvimento (com hot-reload)
 npm run start:dev
 
 # Produção
+npm run build
 npm run start:prod
 ```
 
-### Scripts Disponíveis
+### Scripts
 
-- `npm run lint`: Executa a análise estática do código.
-- `npm run format`: Formata os arquivos utilizando o Prettier.
-- `npm run test`: Executa os testes unitários.
+| Script              | Descrição                     |
+|---------------------|-------------------------------|
+| `npm run start:dev` | Servidor com hot-reload       |
+| `npm run build`     | Compila para produção         |
+| `npm run lint`      | Análise estática (ESLint)     |
+| `npm run format`    | Formata código (Prettier)     |
+| `npm run test`      | Executa testes unitários      |
+
+## 🔐 Segurança
+
+- Senhas são criptografadas com **bcrypt** (salt rounds: 10)
+- Validação por email único via custom validator
+- `synchronize: true` apenas em ambiente de desenvolvimento
+- Validação de entrada em todos os endpoints via DTOs
 
 ## 📄 Licença
 
-Este projeto foi criado durante o curso de NestJS da Alura.
+Projeto criado durante o curso de NestJS da Alura.
