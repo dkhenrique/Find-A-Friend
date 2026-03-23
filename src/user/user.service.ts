@@ -21,6 +21,11 @@ export class UserService {
       name: dto.name,
       email: dto.email,
       password: hashedPassword,
+      address: dto.address,
+      city: dto.city,
+      state: dto.state,
+      zipCode: dto.zipCode,
+      whatsapp: dto.whatsapp,
     });
 
     const saved = await this.userRepository.save(user);
@@ -30,6 +35,10 @@ export class UserService {
   async existsByEmail(email: string): Promise<boolean> {
     const count = await this.userRepository.count({ where: { email } });
     return count > 0;
+  }
+
+  async findByEmail(email: string): Promise<UserEntity | null> {
+    return this.userRepository.findOneBy({ email });
   }
 
   async findAllUsers() {

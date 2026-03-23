@@ -1,16 +1,44 @@
-import { IsEmail, MinLength, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { EmailIsUnique } from '../validator/email-is-unique.validator';
 
 export class CreateUserDto {
-  @IsOptional()
+  @IsNotEmpty({ message: 'Nome é obrigatório' })
+  @IsString()
   name: string;
 
-  @IsEmail(undefined, { message: 'Email is invalid' })
-  @IsOptional()
-  @EmailIsUnique({ message: 'This email already exists in our database ' })
+  @IsEmail(undefined, { message: 'Email inválido' })
+  @IsNotEmpty({ message: 'Email é obrigatório' })
+  @EmailIsUnique({ message: 'Este email já existe na base de dados' })
   email: string;
 
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
-  @IsOptional()
+  @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres' })
+  @IsNotEmpty({ message: 'Senha é obrigatória' })
   password: string;
+
+  @IsNotEmpty({ message: 'Endereço é obrigatório' })
+  @IsString()
+  address: string;
+
+  @IsNotEmpty({ message: 'Cidade é obrigatória' })
+  @IsString()
+  city: string;
+
+  @IsNotEmpty({ message: 'Estado é obrigatório' })
+  @IsString()
+  @MaxLength(2, { message: 'Estado deve ter no máximo 2 caracteres (UF)' })
+  state: string;
+
+  @IsNotEmpty({ message: 'CEP é obrigatório' })
+  @IsString()
+  zipCode: string;
+
+  @IsNotEmpty({ message: 'WhatsApp é obrigatório' })
+  @IsString()
+  whatsapp: string;
 }

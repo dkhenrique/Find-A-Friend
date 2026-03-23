@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { PetEnum } from 'src/enums/petEnum';
 import { PetAge } from 'src/enums/pet-age.enum';
 import { PetSize } from 'src/enums/pet-size.enum';
@@ -6,22 +6,18 @@ import { EnergyLevel } from 'src/enums/energy-level.enum';
 import { IndependenceLevel } from 'src/enums/independence-level.enum';
 import { PetEnvironment } from 'src/enums/pet-environment.enum';
 
-export class CreatePetDto {
-  @IsNotEmpty({ message: 'Nome é obrigatório' })
+export class ListPetsQueryDto {
+  @IsNotEmpty({ message: 'A cidade é obrigatória para listar os pets' })
   @IsString()
-  name: string;
+  city: string;
 
-  @IsNotEmpty({ message: 'O campo espécie é obrigatório' })
-  @IsEnum(PetEnum, { message: 'Espécie deve ser um tipo válido de pet' })
-  especie: PetEnum;
-
-  @IsNotEmpty({ message: 'Idade é obrigatória' })
+  @IsOptional()
   @IsEnum(PetAge, { message: 'Idade deve ser: filhote, adulto ou idoso' })
-  age: PetAge;
+  age?: PetAge;
 
-  @IsNotEmpty({ message: 'Porte é obrigatório' })
+  @IsOptional()
   @IsEnum(PetSize, { message: 'Porte deve ser: pequeno, medio ou grande' })
-  size: PetSize;
+  size?: PetSize;
 
   @IsOptional()
   @IsEnum(EnergyLevel, {
@@ -42,6 +38,6 @@ export class CreatePetDto {
   environment?: PetEnvironment;
 
   @IsOptional()
-  @IsString()
-  description?: string;
+  @IsEnum(PetEnum, { message: 'Espécie deve ser um tipo válido' })
+  especie?: PetEnum;
 }

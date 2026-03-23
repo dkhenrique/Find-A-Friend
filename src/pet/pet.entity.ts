@@ -6,6 +6,7 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -28,7 +29,25 @@ export class PetEntity {
   @Column({ name: 'especie', enum: PetEnum, nullable: false })
   especie: PetEnum;
 
-  @Column({ name: 'adotado', nullable: false })
+  @Column({ name: 'age', length: 20, nullable: false })
+  age: string;
+
+  @Column({ name: 'size', length: 20, nullable: false })
+  size: string;
+
+  @Column({ name: 'energy_level', length: 20, nullable: true })
+  energyLevel: string;
+
+  @Column({ name: 'independence_level', length: 20, nullable: true })
+  independenceLevel: string;
+
+  @Column({ name: 'environment', length: 50, nullable: true })
+  environment: string;
+
+  @Column({ name: 'description', type: 'text', nullable: true })
+  description: string;
+
+  @Column({ name: 'adotado', nullable: false, default: false })
   adotado: boolean;
 
   @ManyToOne(() => UserEntity, (user) => user.pets)
@@ -46,6 +65,7 @@ export class PetEntity {
   @ManyToMany(() => PetRequirementEntity, (requirement) => requirement.pets, {
     cascade: ['insert'],
   })
+  @JoinTable()
   requirements: PetRequirementEntity[];
 
   @CreateDateColumn({ name: 'created_at' })

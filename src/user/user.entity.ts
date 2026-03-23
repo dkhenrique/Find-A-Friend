@@ -24,6 +24,21 @@ export class UserEntity {
   @Column({ name: 'password', length: 255, nullable: false })
   password: string;
 
+  @Column({ name: 'address', length: 255, nullable: false })
+  address: string;
+
+  @Column({ name: 'city', length: 100, nullable: false })
+  city: string;
+
+  @Column({ name: 'state', length: 2, nullable: false })
+  state: string;
+
+  @Column({ name: 'zip_code', length: 10, nullable: false })
+  zipCode: string;
+
+  @Column({ name: 'whatsapp', length: 20, nullable: false })
+  whatsapp: string;
+
   @OneToMany(() => PetEntity, (pet) => pet.user, {
     eager: true,
     cascade: ['insert', 'update'],
