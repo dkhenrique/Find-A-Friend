@@ -1,10 +1,11 @@
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PetEnum } from 'src/enums/petEnum';
 import { PetAge } from 'src/enums/pet-age.enum';
 import { PetSize } from 'src/enums/pet-size.enum';
 import { EnergyLevel } from 'src/enums/energy-level.enum';
 import { IndependenceLevel } from 'src/enums/independence-level.enum';
 import { PetEnvironment } from 'src/enums/pet-environment.enum';
+import { PetStatus } from 'src/enums/pet-status.enum';
 
 export class UpdatePetDto {
   @IsOptional()
@@ -46,6 +47,8 @@ export class UpdatePetDto {
   description?: string;
 
   @IsOptional()
-  @IsBoolean({ message: 'Adotado deve ser um boolean' })
-  adotado?: boolean;
+  @IsEnum(PetStatus, {
+    message: 'Status deve ser: available, in_process ou adopted',
+  })
+  status?: PetStatus;
 }

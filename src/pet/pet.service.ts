@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PetEntity } from './pet.entity';
 import { Repository } from 'typeorm';
@@ -11,6 +15,7 @@ import { CreatePetPhotoDto } from './dto/create-pet-photo.dto';
 import { CreatePetRequirementDto } from './dto/create-pet-requirement.dto';
 import { ListPetsQueryDto } from './dto/list-pets-query.dto';
 import { UserEntity } from 'src/user/user.entity';
+import { PetStatus } from 'src/enums/pet-status.enum';
 
 @Injectable()
 export class PetService {
@@ -25,27 +30,53 @@ export class PetService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
+  /**
+   * Busca o pet e verifica se pertence à ORG logada.
+   * Reutilizado em todas as operações de escrita.
+   */
+  private async findPetAndCheckOwnership(
+    petId: string,
+    orgId: string,
+    relations: string[] = ['user'],
+  ): Promise<PetEntity> {
+    const pet = await this.petRepository.findOne({
+      where: { id: petId },
+      relations,
+    });
+    if (!pet) throw new NotFoundException('Pet não encontrado');
+    if (pet.user.id !== orgId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para modificar este pet',
+      );
+    }
+    return pet;
+  }
+
   async createPet(dto: CreatePetDto, orgId: string): Promise<PetListDto> {
     const org = await this.userRepository.findOneBy({ id: orgId });
     if (!org) throw new NotFoundException('ORG não encontrada');
 
     const pet = this.petRepository.create({
       ...dto,
-      adotado: false,
+      status: PetStatus.AVAILABLE,
       user: org,
     });
 
     const saved = await this.petRepository.save(pet);
-    return new PetListDto(saved.id, saved.name, saved.especie, saved.adotado);
+    return new PetListDto(saved.id, saved.name, saved.especie, saved.status);
   }
 
   async findPetsByCity(query: ListPetsQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const skip = (page - 1) * limit;
+
     const qb = this.petRepository
       .createQueryBuilder('pet')
       .innerJoinAndSelect('pet.user', 'org')
       .leftJoinAndSelect('pet.photos', 'photos')
       .where('org.city = :city', { city: query.city })
-      .andWhere('pet.adotado = :adotado', { adotado: false });
+      .andWhere('pet.status = :status', { status: PetStatus.AVAILABLE });
 
     if (query.age) {
       qb.andWhere('pet.age = :age', { age: query.age });
@@ -72,7 +103,17 @@ export class PetService {
       qb.andWhere('pet.especie = :especie', { especie: query.especie });
     }
 
-    return qb.getMany();
+    const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findPetById(id: string) {
@@ -83,8 +124,12 @@ export class PetService {
     if (!pet) throw new NotFoundException('Pet não encontrado');
 
     // Remove dados sensíveis da ORG na resposta
-    const orgData = { ...pet.user } as Partial<UserEntity>;
-    delete orgData.password;
+    let orgData = null;
+    if (pet.user) {
+      const { password, ...rest } = pet.user;
+      orgData = rest;
+    }
+
     return {
       ...pet,
       user: orgData,
@@ -97,6 +142,7 @@ export class PetService {
       relations: ['user'],
     });
     if (!pet) throw new NotFoundException('Pet não encontrado');
+    if (!pet.user) throw new NotFoundException('Dados da ORG não encontrados para este pet');
 
     const whatsapp = pet.user.whatsapp;
     const message = encodeURIComponent(
@@ -106,23 +152,25 @@ export class PetService {
     return {
       orgName: pet.user.name,
       whatsapp,
+      link: `https://wa.me/${whatsapp}`,
       whatsappUrl: `https://wa.me/${whatsapp}?text=${message}`,
     };
   }
 
-  async updatePet(id: string, petEntity: UpdatePetDto) {
-    await this.petRepository.update(id, petEntity);
+  async updatePet(id: string, dto: UpdatePetDto, orgId: string) {
+    await this.findPetAndCheckOwnership(id, orgId);
+    await this.petRepository.update(id, dto);
   }
 
-  async deletePet(id: string) {
-    await this.petRepository.delete(id);
+  async deletePet(id: string, orgId: string) {
+    await this.findPetAndCheckOwnership(id, orgId);
+    await this.petRepository.softDelete(id);
   }
 
   // --- Fotos ---
 
-  async addPhoto(petId: string, dto: CreatePetPhotoDto) {
-    const pet = await this.petRepository.findOneBy({ id: petId });
-    if (!pet) throw new NotFoundException('Pet não encontrado');
+  async addPhoto(petId: string, dto: CreatePetPhotoDto, orgId: string) {
+    const pet = await this.findPetAndCheckOwnership(petId, orgId);
 
     const photo = this.photoRepository.create({
       url: dto.url,
@@ -132,7 +180,9 @@ export class PetService {
     return this.photoRepository.save(photo);
   }
 
-  async removePhoto(petId: string, photoId: string) {
+  async removePhoto(petId: string, photoId: string, orgId: string) {
+    await this.findPetAndCheckOwnership(petId, orgId);
+
     const photo = await this.photoRepository.findOne({
       where: { id: photoId, pet: { id: petId } },
     });
@@ -142,12 +192,15 @@ export class PetService {
 
   // --- Requisitos ---
 
-  async addRequirement(petId: string, dto: CreatePetRequirementDto) {
-    const pet = await this.petRepository.findOne({
-      where: { id: petId },
-      relations: ['requirements'],
-    });
-    if (!pet) throw new NotFoundException('Pet não encontrado');
+  async addRequirement(
+    petId: string,
+    dto: CreatePetRequirementDto,
+    orgId: string,
+  ) {
+    const pet = await this.findPetAndCheckOwnership(petId, orgId, [
+      'user',
+      'requirements',
+    ]);
 
     let requirement = await this.requirementRepository.findOneBy({
       title: dto.title,
@@ -163,12 +216,15 @@ export class PetService {
     return requirement;
   }
 
-  async removeRequirement(petId: string, requirementId: string) {
-    const pet = await this.petRepository.findOne({
-      where: { id: petId },
-      relations: ['requirements'],
-    });
-    if (!pet) throw new NotFoundException('Pet não encontrado');
+  async removeRequirement(
+    petId: string,
+    requirementId: string,
+    orgId: string,
+  ) {
+    const pet = await this.findPetAndCheckOwnership(petId, orgId, [
+      'user',
+      'requirements',
+    ]);
 
     pet.requirements = pet.requirements.filter((r) => r.id !== requirementId);
     await this.petRepository.save(pet);

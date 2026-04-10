@@ -2,6 +2,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
+  Matches,
   MinLength,
   MaxLength,
 } from 'class-validator';
@@ -40,5 +41,8 @@ export class CreateUserDto {
 
   @IsNotEmpty({ message: 'WhatsApp é obrigatório' })
   @IsString()
+  @Matches(/^\d{10,13}$/, {
+    message: 'WhatsApp deve conter apenas dígitos (10 a 13 caracteres)',
+  })
   whatsapp: string;
 }

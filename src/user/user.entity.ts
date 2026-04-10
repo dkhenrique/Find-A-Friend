@@ -5,12 +5,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity({ name: 'users' })
+@Index('IDX_users_city', ['city'])
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -39,8 +41,10 @@ export class UserEntity {
   @Column({ name: 'whatsapp', length: 20, nullable: false })
   whatsapp: string;
 
+  @Column({ name: 'refresh_token', length: 255, nullable: true })
+  refreshToken: string | null;
+
   @OneToMany(() => PetEntity, (pet) => pet.user, {
-    eager: true,
     cascade: ['insert', 'update'],
   })
   pets: PetEntity[];

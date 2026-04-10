@@ -1,10 +1,12 @@
 import { PetEnum } from 'src/enums/petEnum';
+import { PetStatus } from 'src/enums/pet-status.enum';
 import { UserEntity } from 'src/user/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -19,6 +21,7 @@ import { AdoptionEntity } from 'src/adoption/adoption.entity';
 import { PetRequirementEntity } from './pet-requirement.entity';
 
 @Entity({ name: 'pets' })
+@Index('IDX_pets_status', ['status'])
 export class PetEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -47,8 +50,13 @@ export class PetEntity {
   @Column({ name: 'description', type: 'text', nullable: true })
   description: string;
 
-  @Column({ name: 'adotado', nullable: false, default: false })
-  adotado: boolean;
+  @Column({
+    name: 'status',
+    type: 'varchar',
+    length: 20,
+    default: PetStatus.AVAILABLE,
+  })
+  status: PetStatus;
 
   @ManyToOne(() => UserEntity, (user) => user.pets)
   @JoinColumn({ name: 'user_id' })

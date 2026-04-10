@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserListDto } from './dto/UserList.dto';
 import { UserEntity } from './user.entity';
@@ -49,11 +49,33 @@ export class UserService {
     return listUsers;
   }
 
+  async findUserById(id: string) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) throw new NotFoundException('ORG não encontrada');
+
+    // Never expose password in response
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
   async updateUser(id: string, userEntity: UpdateUserDto) {
     await this.userRepository.update(id, userEntity);
   }
 
+  async updateRefreshToken(
+    userId: string,
+    hashedRefreshToken: string | null,
+  ) {
+    await this.userRepository.update(userId, {
+      refreshToken: hashedRefreshToken,
+    });
+  }
+
+  async findById(id: string): Promise<UserEntity | null> {
+    return this.userRepository.findOneBy({ id });
+  }
+
   async deleteUser(userId: string) {
-    await this.userRepository.delete(userId);
+    await this.userRepository.softDelete(userId);
   }
 }

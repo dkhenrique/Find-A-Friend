@@ -1,9 +1,11 @@
+import { PetStatus } from 'src/enums/pet-status.enum';
+
 export class AdoptionsListDto {
   constructor(
-    readonly adopterId: string,
+    readonly adoptionId: string,
     readonly petId: string,
     readonly adopterName: string,
     readonly petName: string,
-    readonly adotado: boolean,
+    readonly status: PetStatus,
   ) {}
 }

@@ -1,4 +1,12 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 import { PetEnum } from 'src/enums/petEnum';
 import { PetAge } from 'src/enums/pet-age.enum';
 import { PetSize } from 'src/enums/pet-size.enum';
@@ -40,4 +48,15 @@ export class ListPetsQueryDto {
   @IsOptional()
   @IsEnum(PetEnum, { message: 'Espécie deve ser um tipo válido' })
   especie?: PetEnum;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsPositive({ message: 'page deve ser um número positivo' })
+  page?: number = 1;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsPositive({ message: 'limit deve ser um número positivo' })
+  @Max(100, { message: 'limit máximo é 100' })
+  limit?: number = 20;
 }
