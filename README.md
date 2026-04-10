@@ -54,10 +54,11 @@ AdoptionEntity (adoptions)
 
 | Método | Endpoint       | Auth | Descrição              |
 |--------|----------------|------|------------------------|
-| `POST` | `/auth/login`  | ❌   | Login (retorna JWT)    |
+| `POST` | `/auth/login`  | ❌   | Login (retorna tokens) |
+| `POST` | `/auth/refresh`| ❌   | Renovar Token (exige refreshToken) |
 
 **Body:** `{ "email": "org@email.com", "password": "123456" }`
-**Resposta:** `{ "access_token": "eyJ..." }`
+**Resposta:** `{ "access_token": "eyJ...", "refresh_token": "..." }`
 
 ---
 
@@ -95,10 +96,10 @@ AdoptionEntity (adoptions)
 
 | Método   | Endpoint          | Auth | Descrição          |
 |----------|-------------------|------|--------------------|
-| `POST`   | `/adoptions`      | ❌   | Realizar adoção    |
-| `GET`    | `/adoptions`      | ❌   | Listar adoções     |
-| `GET`    | `/adoptions/:id`  | ❌   | Buscar adoção      |
-| `DELETE` | `/adoptions/:id`  | ❌   | Cancelar adoção    |
+| `POST`   | `/adoptions`      | 🔒   | Realizar adoção (Apenas ORG dona do pet) |
+| `GET`    | `/adoptions`      | 🔒   | Listar adoções da sua ORG |
+| `GET`    | `/adoptions/:id`  | 🔒   | Buscar adoção (Com validação de posse) |
+| `DELETE` | `/adoptions/:id`  | 🔒   | Cancelar adoção (Restaura pet para AVAILABLE) |
 
 ## 📖 Documentação Swagger
 
@@ -180,11 +181,12 @@ npm run start:prod
 ## 🔐 Segurança
 
 - Senhas criptografadas com **bcrypt** (salt rounds: 10)
-- Autenticação via **JWT** (Bearer token)
-- Guards protegem rotas de escrita (`JwtAuthGuard`)
+- Autenticação via **JWT** (Bearer token) provendo **Refresh Tokens** rotativos.
+- Exception Filters, Validation Pipes globais e Rate Limiting (`@nestjs/throttler`) para prevenir flood.
+- Guards fortemente acoplados de Posse Extrita (`JwtAuthGuard` garante isolamento Multi-Tenancy das ORGs).
+- Rastreamento passivo via Deleção Lógica (`Soft-Delete`) nativa do TypeORM.
 - Validação por email único via custom validator
-- Dados sensíveis da ORG (password) removidos das respostas
-- Validação de entrada em todos os endpoints via DTOs
+- Dados sensíveis da ORG (password) não expostos no exterior da camada DTO.
 
 ## 📄 Licença
 
