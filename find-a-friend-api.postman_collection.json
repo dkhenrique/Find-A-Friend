@@ -1,0 +1,617 @@
+{
+	"info": {
+		"_postman_id": "find-a-friend-api-collection",
+		"name": "Find a Friend API",
+		"description": "Coleção completa da API Find a Friend — cadastro de ORGs, pets e gerenciamento de adoções.\n\n## Como usar\n1. Configure a variável `baseUrl` (padrão: `http://localhost:3000`)\n2. Comece criando uma ORG em **ORGs > Cadastrar ORG**\n3. Faça login em **Auth > Login** — o token JWT será salvo automaticamente\n4. Use as rotas protegidas (criar pet, fotos, requisitos etc.)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "orgId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "petId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "photoId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "requirementId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adoptionId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Autenticação",
+			"description": "Endpoints de autenticação (login JWT)",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201 || pm.response.code === 200) {",
+									"    const json = pm.response.json();",
+									"    if (json.access_token) {",
+									"        pm.collectionVariables.set('accessToken', json.access_token);",
+									"        console.log('✅ Token salvo automaticamente');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"org@email.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Autentica uma ORG e retorna um JWT.\n\n**O token é salvo automaticamente** na variável `accessToken` da coleção."
+					}
+				}
+			]
+		},
+		{
+			"name": "🏢 ORGs (Organizações)",
+			"description": "CRUD de organizações responsáveis pelos pets",
+			"item": [
+				{
+					"name": "Cadastrar ORG",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.user && json.user.id) {",
+									"        pm.collectionVariables.set('orgId', json.user.id);",
+									"        console.log('✅ orgId salvo:', json.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"ONG Patinhas Felizes\",\n  \"email\": \"org@email.com\",\n  \"password\": \"123456\",\n  \"address\": \"Rua das Flores, 123\",\n  \"city\": \"São Paulo\",\n  \"state\": \"SP\",\n  \"zipCode\": \"01001-000\",\n  \"whatsapp\": \"11999998888\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"]
+						},
+						"description": "Cria uma nova organização (ORG).\n\nTodos os campos são obrigatórios. O `state` deve ter no máximo 2 caracteres (UF)."
+					}
+				},
+				{
+					"name": "Listar todas as ORGs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"]
+						},
+						"description": "Retorna a lista de todas as organizações cadastradas."
+					}
+				},
+				{
+					"name": "Atualizar ORG",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"ONG Patinhas Felizes (Atualizada)\",\n  \"whatsapp\": \"11988887777\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{orgId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{orgId}}"]
+						},
+						"description": "Atualiza os dados de uma ORG. Todos os campos são opcionais.\n\nSubstitua `{{orgId}}` pelo ID real ou cadastre uma ORG primeiro para salvar o ID automaticamente."
+					}
+				},
+				{
+					"name": "Remover ORG",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{orgId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{orgId}}"]
+						},
+						"description": "Remove uma organização pelo ID."
+					}
+				}
+			]
+		},
+		{
+			"name": "🐾 Pets",
+			"description": "CRUD de pets, fotos e requisitos de adoção",
+			"item": [
+				{
+					"name": "Cadastrar Pet 🔒",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.pet && json.pet.id) {",
+									"        pm.collectionVariables.set('petId', json.pet.id);",
+									"        console.log('✅ petId salvo:', json.pet.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Rex\",\n  \"especie\": \"dog\",\n  \"age\": \"adulto\",\n  \"size\": \"grande\",\n  \"energyLevel\": \"alta\",\n  \"independenceLevel\": \"baixo\",\n  \"environment\": \"amplo\",\n  \"description\": \"Cachorro brincalhão e amigável, adora crianças\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/pets",
+							"host": ["{{baseUrl}}"],
+							"path": ["pets"]
+						},
+						"description": "Cadastra um novo pet vinculado à ORG autenticada.\n\n🔒 **Requer JWT**\n\n### Enums válidos\n- **especie**: `dog`, `cat`, `bird`, `fish`, `reptile`, `other`\n- **age**: `filhote`, `adulto`, `idoso`\n- **size**: `pequeno`, `medio`, `grande`\n- **energyLevel**: `baixa`, `media`, `alta`\n- **independenceLevel**: `baixo`, `medio`, `alto`\n- **environment**: `amplo`, `medio`, `pequeno`"
+					}
+				},
+				{
+					"name": "Listar pets por cidade",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/pets?city=São Paulo",
+							"host": ["{{baseUrl}}"],
+							"path": ["pets"],
+							"query": [
+								{
+									"key": "city",
+									"value": "São Paulo",
+									"description": "Obrigatório — cidade para buscar"
+								},
+								{
+									"key": "age",
+									"value": "filhote",
+									"description": "Opcional — filhote | adulto | idoso",
+									"disabled": true
+								},
+								{
+									"key": "size",
+									"value": "pequeno",
+									"description": "Opcional — pequeno | medio | grande",
+									"disabled": true
+								},
+								{
+									"key": "energyLevel",
+									"value": "alta",
+									"description": "Opcional — baixa | media | alta",
+									"disabled": true
+								},
+								{
+									"key": "independenceLevel",
+									"value": "baixo",
+									"description": "Opcional — baixo | medio | alto",
+									"disabled": true
+								},
+								{
+									"key": "environment",
+									"value": "amplo",
+									"description": "Opcional — amplo | medio | pequeno",
+									"disabled": true
+								},
+								{
+									"key": "especie",
+									"value": "dog",
+									"description": "Opcional — dog | cat | bird | fish | reptile | other",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista pets disponíveis filtrando por cidade (obrigatório).\n\nOs filtros opcionais estão desabilitados por padrão — habilite os que quiser usar."
+					}
+				},
+				{
+					"name": "Detalhes do pet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/pets/{{petId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["pets", "{{petId}}"]
+						},
+						"description": "Retorna os detalhes completos de um pet, incluindo fotos, requisitos e dados da ORG."
+					}
+				},
+				{
+					"name": "Contato WhatsApp do pet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/pets/{{petId}}/contact",
+							"host": ["{{baseUrl}}"],
+							"path": ["pets", "{{petId}}", "contact"]
+						},
+						"description": "Retorna o número de WhatsApp da ORG responsável pelo pet."
+					}
+				},
+				{
+					"name": "Atualizar Pet 🔒",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Rex (Atualizado)\",\n  \"size\": \"medio\",\n  \"description\": \"Descrição atualizada do pet\",\n  \"adotado\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/pets/{{petId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["pets", "{{petId}}"]
+						},
+						"description": "Atualiza dados de um pet. Todos os campos são opcionais.\n\n🔒 **Requer JWT**"
+					}
+				},
+				{
+					"name": "Remover Pet 🔒",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/pets/{{petId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["pets", "{{petId}}"]
+						},
+						"description": "Remove um pet pelo ID.\n\n🔒 **Requer JWT**"
+					}
+				},
+				{
+					"name": "📸 Fotos",
+					"description": "Gerenciamento de fotos dos pets",
+					"item": [
+						{
+							"name": "Adicionar foto ao pet 🔒",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const json = pm.response.json();",
+											"    if (json.photo && json.photo.id) {",
+											"        pm.collectionVariables.set('photoId', json.photo.id);",
+											"        console.log('✅ photoId salvo:', json.photo.id);",
+											"    }",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"url\": \"https://images.unsplash.com/photo-1587300003388-59208cc962cb\",\n  \"description\": \"Rex brincando no parque\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/pets/{{petId}}/photos",
+									"host": ["{{baseUrl}}"],
+									"path": ["pets", "{{petId}}", "photos"]
+								},
+								"description": "Adiciona uma foto a um pet.\n\n🔒 **Requer JWT**\n\n- `url` (obrigatório) — URL válida da imagem\n- `description` (opcional) — legenda da foto"
+							}
+						},
+						{
+							"name": "Remover foto do pet 🔒",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/pets/{{petId}}/photos/{{photoId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["pets", "{{petId}}", "photos", "{{photoId}}"]
+								},
+								"description": "Remove uma foto de um pet.\n\n🔒 **Requer JWT**"
+							}
+						}
+					]
+				},
+				{
+					"name": "📋 Requisitos",
+					"description": "Gerenciamento de requisitos de adoção do pet",
+					"item": [
+						{
+							"name": "Adicionar requisito ao pet 🔒",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const json = pm.response.json();",
+											"    if (json.requirement && json.requirement.id) {",
+											"        pm.collectionVariables.set('requirementId', json.requirement.id);",
+											"        console.log('✅ requirementId salvo:', json.requirement.id);",
+											"    }",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Ter quintal espaçoso\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/pets/{{petId}}/requirements",
+									"host": ["{{baseUrl}}"],
+									"path": ["pets", "{{petId}}", "requirements"]
+								},
+								"description": "Adiciona um requisito de adoção a um pet.\n\n🔒 **Requer JWT**\n\n- `title` (obrigatório) — descrição do requisito"
+							}
+						},
+						{
+							"name": "Remover requisito do pet 🔒",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/pets/{{petId}}/requirements/{{requirementId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["pets", "{{petId}}", "requirements", "{{requirementId}}"]
+								},
+								"description": "Remove um requisito de adoção de um pet.\n\n🔒 **Requer JWT**"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "💚 Adoções",
+			"description": "Gerenciamento de adoções de pets",
+			"item": [
+				{
+					"name": "Registrar adoção",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.id) {",
+									"        pm.collectionVariables.set('adoptionId', json.id);",
+									"        console.log('✅ adoptionId salvo:', json.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"petId\": \"{{petId}}\",\n  \"adopterId\": \"{{orgId}}\",\n  \"notes\": \"Adoção realizada após visita presencial\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/adoptions",
+							"host": ["{{baseUrl}}"],
+							"path": ["adoptions"]
+						},
+						"description": "Registra uma nova adoção.\n\n- `petId` (obrigatório, UUID) — ID do pet\n- `adopterId` (obrigatório, UUID) — ID do adotante\n- `notes` (opcional) — observações sobre a adoção"
+					}
+				},
+				{
+					"name": "Listar todas as adoções",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/adoptions",
+							"host": ["{{baseUrl}}"],
+							"path": ["adoptions"]
+						},
+						"description": "Retorna a lista de todas as adoções registradas."
+					}
+				},
+				{
+					"name": "Buscar adoção por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/adoptions/{{adoptionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["adoptions", "{{adoptionId}}"]
+						},
+						"description": "Retorna os detalhes de uma adoção específica."
+					}
+				},
+				{
+					"name": "Cancelar adoção",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/adoptions/{{adoptionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["adoptions", "{{adoptionId}}"]
+						},
+						"description": "Cancela uma adoção pelo ID."
+					}
+				}
+			]
+		}
+	]
+}
