@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -44,13 +45,13 @@ export class PetController {
 
   @ApiOperation({ summary: 'Visualizar detalhes de um pet' })
   @Get(':id')
-  async findPetById(@Param('id') id: string) {
+  async findPetById(@Param('id', ParseUUIDPipe) id: string) {
     return this.petService.findPetById(id);
   }
 
   @ApiOperation({ summary: 'Obter contato WhatsApp da ORG do pet' })
   @Get(':id/contact')
-  getContact(@Param('id') id: string) {
+  getContact(@Param('id', ParseUUIDPipe) id: string) {
     return this.petService.getWhatsAppContact(id);
   }
 
@@ -58,8 +59,12 @@ export class PetController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Put('/:id')
-  async updatePet(@Param('id') id: string, @Body() dto: UpdatePetDto) {
-    await this.petService.updatePet(id, dto);
+  async updatePet(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePetDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    await this.petService.updatePet(id, dto, req.user.id);
     return { message: 'Pet atualizado' };
   }
 
@@ -67,8 +72,11 @@ export class PetController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
-  async deletePet(@Param('id') id: string) {
-    await this.petService.deletePet(id);
+  async deletePet(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    await this.petService.deletePet(id, req.user.id);
     return { message: 'Pet removido' };
   }
 
@@ -79,10 +87,11 @@ export class PetController {
   @UseGuards(JwtAuthGuard)
   @Post(':petId/photos')
   async addPhoto(
-    @Param('petId') petId: string,
+    @Param('petId', ParseUUIDPipe) petId: string,
     @Body() dto: CreatePetPhotoDto,
+    @Request() req: { user: { id: string } },
   ) {
-    const photo = await this.petService.addPhoto(petId, dto);
+    const photo = await this.petService.addPhoto(petId, dto, req.user.id);
     return { photo, message: 'Foto adicionada' };
   }
 
@@ -91,10 +100,11 @@ export class PetController {
   @UseGuards(JwtAuthGuard)
   @Delete(':petId/photos/:photoId')
   async removePhoto(
-    @Param('petId') petId: string,
-    @Param('photoId') photoId: string,
+    @Param('petId', ParseUUIDPipe) petId: string,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
+    @Request() req: { user: { id: string } },
   ) {
-    await this.petService.removePhoto(petId, photoId);
+    await this.petService.removePhoto(petId, photoId, req.user.id);
     return { message: 'Foto removida' };
   }
 
@@ -105,10 +115,15 @@ export class PetController {
   @UseGuards(JwtAuthGuard)
   @Post(':petId/requirements')
   async addRequirement(
-    @Param('petId') petId: string,
+    @Param('petId', ParseUUIDPipe) petId: string,
     @Body() dto: CreatePetRequirementDto,
+    @Request() req: { user: { id: string } },
   ) {
-    const requirement = await this.petService.addRequirement(petId, dto);
+    const requirement = await this.petService.addRequirement(
+      petId,
+      dto,
+      req.user.id,
+    );
     return { requirement, message: 'Requisito adicionado' };
   }
 
@@ -117,10 +132,15 @@ export class PetController {
   @UseGuards(JwtAuthGuard)
   @Delete(':petId/requirements/:requirementId')
   async removeRequirement(
-    @Param('petId') petId: string,
-    @Param('requirementId') requirementId: string,
+    @Param('petId', ParseUUIDPipe) petId: string,
+    @Param('requirementId', ParseUUIDPipe) requirementId: string,
+    @Request() req: { user: { id: string } },
   ) {
-    await this.petService.removeRequirement(petId, requirementId);
+    await this.petService.removeRequirement(
+      petId,
+      requirementId,
+      req.user.id,
+    );
     return { message: 'Requisito removido' };
   }
 }
